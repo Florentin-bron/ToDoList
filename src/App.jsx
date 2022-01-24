@@ -1,44 +1,49 @@
-import { useState } from 'react'
+import {useEffect, useState} from 'react'
 import './App.css'
 import {todos} from "./todos";
+import Modal from "react-modal";
 
 import React from "react";
 import ReactDOM from "react-dom";
-import Modal from "react-bootstrap/Modal";
-import ModalBody from "react-bootstrap/ModalBody";
-import ModalHeader from "react-bootstrap/ModalHeader";
-import ModalFooter from "react-bootstrap/ModalFooter";
-import ModalTitle from "react-bootstrap/ModalTitle";
 
 function App() {
-    const [listTodo, setListTodo] = useState(todos);
-    const [isOpen, setIsOpen] = React.useState(false);
+
+    const [listTodo, setListTodo] = useState(localStorage.getItem('localTodos') ? JSON.parse(localStorage.getItem('localTodos')) : todos);
     const [titre, setTitre] = useState("");
     const [description, setDescription] = useState("");
+    const [dueDate, setDueDate] = useState("");
+    const [isOpen, setIsOpen] = useState(false);
 
-    const showModal = () => {
-        setIsOpen(true);
-    };
+    function toggleModal() {
+        setIsOpen(!isOpen);
+    }
 
-    const hideModal = () => {
-        setIsOpen(false);
-    };
+    useEffect(() => {
+        localStorage.setItem('localTodos', JSON.stringify(listTodo))
+    })
 
     const ajoutTodo = (e) =>{
         e.preventDefault();
         if(titre !== ""){
-            let test = {
-                'id': listTodo.length.toString()+1,
+            const today = new Date();
+            const date = today.getFullYear()+'/'+(today.getMonth()+1)+'/'+today.getDate();
+            const maxId = parseInt(listTodo.reduce(
+                (max, todo) => (todo.id > max ? todo.id : max),
+                listTodo[0].id
+            ));
+            const test = {
+                'id': (maxId+1).toString(),
                 'titre': titre,
                 'description': description,
-                'dueDate': '10/11/2021',
+                'dueDate': dueDate,
                 'statut': false,
                 'labelId': '1',
-                'creationDate': '03/11/2021',
+                'creationDate': date.toString(),
             }
-            console.log(listTodo)
             setListTodo(listTodo => [...listTodo, test])
-            console.log(listTodo)
+            setTitre("");
+            setDescription("");
+            toggleModal()
         }
     }
 
@@ -52,31 +57,45 @@ function App() {
         setDescription(e.target.value);
     }
 
+    const dueDateChange = (e) => {
+        e.preventDefault();
+        setDueDate(e.target.value.replace(/-/g, "/"));
+    }
+
   return (
     <div>
-        <Modal className='modalCustom' style={{opacity:1}} show={isOpen} onHide={hideModal}>
-            <Modal.Header>
-                <Modal.Title>Ajouter un Todo</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <form>
-                    <div className="form-group">
-                        <label htmlFor="inputTitre">Titre <p style={{color: 'red', display: 'inline'}}>*</p></label>
-                        <input required type="titre" className="form-control" id="inputTitre"
-                               aria-describedby="" placeholder="Titre de votre Todo" onChange={titreChange}/>
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="textArea">Description</label>
-                        <textarea style={{resize: 'none'}} className="form-control" id="textArea" rows="3" onChange={descChange}/>
-                    </div>
-                    <button  onClick={ajoutTodo} className="btn btn-primary">Ajouter</button>
-                </form>
-            </Modal.Body>
+        <Modal
+            isOpen={isOpen}
+            onRequestClose={toggleModal}
+            contentLabel="My dialog"
+        >
+            <button onClick={toggleModal}>Close modal</button>
+            <form>
+                <div className="form-group">
+                    <label htmlFor="inputTitre">Titre <p style={{color: 'red', display: 'inline'}}>*</p></label>
+                    <input required type="titre" className="form-control" id="inputTitre"
+                           aria-describedby="" placeholder="Titre de votre Todo" onChange={titreChange}/>
+                </div>
+                <div className="form-group">
+                    <label htmlFor="textArea">Description</label>
+                    <textarea style={{resize: 'none'}} className="form-control" id="textArea" rows="3" onChange={descChange}/>
+                </div>
+                <div className="form-group">
+                    <label htmlFor="inputTitre">Due date <p style={{color: 'red', display: 'inline'}}>*</p></label>
+                    <input required type="date" className="form-control" id="inputDate"
+                           aria-describedby="" placeholder="jj/mm/aaaa" onChange={dueDateChange} style={{width: '200px'}}/>
+                </div>
+                <div className="form-group">
+                    <input onClick={ajoutTodo} type="submit" value="Ajouter" />
+                </div>
+            </form>
         </Modal>
-      <div className="column">
 
 
-          <button className='btn btn-primary' onClick={showModal}>Ajouter un Todo</button>
+      <div className="container column">
+
+
+          <button className="modal-toggle" onClick={toggleModal}>Ajouter un Todo</button>
 
           <div>
               Liste des Todos :
