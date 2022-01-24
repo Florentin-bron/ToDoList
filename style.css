@@ -1,0 +1,24 @@
+.customNavbar{
+    width: 100vw;
+    color: #ff5c0f;
+    background-color: #282c34;
+    padding: 10px;
+}
+.navbar-tab{
+    display: inline;
+    border-radius: 10px;
+    border-color: #ff5c0f;
+    margin-left: 20px;
+}
+
+.modalCustom{
+    overflow: scroll;
+    height: 800px;
+    padding-top: 100px;
+    bottom: auto;
+    right: auto;
+
+}
+ul {
+    list-style-type: none;
+}
