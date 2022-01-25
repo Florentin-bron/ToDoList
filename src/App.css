@@ -40,3 +40,25 @@
 button {
   font-size: calc(10px + 2vmin);
 }
+
+table,
+td {
+  border: 1px solid #333;
+  padding: 5px;
+}
+
+.modal-button{
+  margin: 5px;
+  background-color: #398bcc;
+  border-radius: 10px;
+  color: white;
+}
+
+.ReactModal__Overlay{
+  background-color: rgba(68, 68, 68, 0.75) !important;
+}
+
+.checkboxTodo{
+  transform: scale(1.5);
+  margin: auto;
+}
