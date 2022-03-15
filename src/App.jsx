@@ -1,14 +1,15 @@
 import {useEffect, useState} from 'react'
-import './App.css'
-import {todos} from "./todos";
-import Modal from "react-modal";
-
 import React from "react";
-import ReactDOM from "react-dom";
+import Modal from "react-modal";
+import './App.css'
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
 
 function App() {
 
-    const [listTodo, setListTodo] = useState(localStorage.getItem('localTodos') ? JSON.parse(localStorage.getItem('localTodos')) : todos);
+    const [listTodo, setListTodo] = useState([]);
     const [titre, setTitre] = useState("");
     const [description, setDescription] = useState("");
     const [dueDate, setDueDate] = useState("");
@@ -29,33 +30,41 @@ function App() {
     }
 
     useEffect(() => {
-        localStorage.setItem('localTodos', JSON.stringify(listTodo))
-    })
+        getTodosList()
+    }, [])
+
+    const getTodosList = () => {
+        fetch('http://localhost:4567/api/todos')
+            .then(response => {
+                if(response.ok){
+                    return response.json()
+                }
+                throw response
+            })
+            .then((data) => {
+                setListTodo(() => data )
+            })
+            .catch(console.log)
+    }
 
     const ajoutTodo = (e) =>{
         e.preventDefault();
         if(titre !== ""){
-            const today = new Date();
-            const date = today.getFullYear()+'/'+(today.getMonth()+1)+'/'+today.getDate();
-            console.log(listTodo.length)
-            let maxId = 0
-            if(listTodo.length !== 0) {
-                maxId = parseInt(listTodo.reduce(
-                    (max, todo) => (todo.id > max ? todo.id : max),
-                    listTodo[0].id
-                ));
-            }
-
-            const test = {
-                'id': (maxId+1).toString(),
-                'titre': titre,
-                'description': description,
-                'dueDate': dueDate,
-                'statut': false,
-                'labelId': '1',
-                'creationDate': date.toString(),
-            }
-            setListTodo(listTodo => [...listTodo, test])
+            const requestOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            };
+            fetch(`http://localhost:4567/api/todos?titre=${titre}&description=${description}&date=${dueDate}&label=1`, requestOptions)
+                .then(response => {
+                    if(response.ok){
+                        toast.success("Todo ajoutée !");
+                        getTodosList()
+                    }
+                    else{
+                        toast.error("Problème lors de la création de la Todo !");
+                    }
+                })
+                .catch(console.log)
             setTitre("");
             setDescription("");
             toggleModal()
@@ -74,7 +83,7 @@ function App() {
 
     const dueDateChange = (e) => {
         e.preventDefault();
-        setDueDate(e.target.value.replace(/-/g, "/"));
+        setDueDate(e.target.value);
     }
 
     const checkboxChange = (e) => {
@@ -90,16 +99,45 @@ function App() {
     }
 
     const switchStatus = (id, status) => {
-        const index = listTodo.map(function(x) {return x.id; }).indexOf(id)
-        listTodo[index].statut = status
-        setListTodo(listTodo => [...listTodo])
+        status = status ? 1 : 0;
+        let field = {};
+        field['statut'] = status.toString();
+        field = JSON.stringify(field)
+        const requestOptions = {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: field
+        };
+        fetch(`http://localhost:4567/api/todos?id=${id}`, requestOptions)
+            .then(response => {
+                if(response.ok){
+                    toast.success("Todo modifié !", {autoClose: 1000,});
+                    getTodosList()
+                }
+                else{
+                    toast.error("Problème lors de la mise à jour du Todo !");
+                }
+            })
+            .catch(console.log)
     }
 
     const deleteTodo = (e) => {
         if(confirm("Confirmer la supression de ce Todo ?")){
-            const index = listTodo.map(function(x) {return x.id; }).indexOf(e.target.id)
-            listTodo.splice(index, 1)
-            setListTodo(listTodo => [...listTodo])
+            const requestOptions = {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+            };
+            fetch(`http://localhost:4567/api/todos?id=${e.target.id}`, requestOptions)
+                .then(response => {
+                    if(response.ok){
+                        toast.success("Todo supprimé !", {autoClose: 2000,});
+                        getTodosList()
+                    }
+                    else{
+                        toast.error("Problème lors de la suppression du Todo !");
+                    }
+                })
+                .catch(console.log)
         }
     }
 
@@ -121,16 +159,43 @@ function App() {
 
     const dueDateEditChange = (e) => {
         e.preventDefault();
-        setDueDateEdit(e.target.value.replace(/-/g, "/"));
+        setDueDateEdit(e.target.value);
     }
 
     const editTodo = (e) => {
         e.preventDefault()
-        const index = listTodo.map(function(x) {return x.id; }).indexOf(e.target.id)
-        listTodo[index].titre = titreEdit
-        listTodo[index].description = descriptionEdit
-        listTodo[index].dueDate = dueDateEdit
-        setListTodo(listTodo => [...listTodo])
+
+        let listField = {};
+        listField['titre'] = titreEdit;
+        listField['description'] = descriptionEdit;
+        listField['due_date'] = dueDateEdit;
+        let bodyContent = {};
+        for(let name in listField){
+            if(listField[name] !== ""){
+                bodyContent[name] = listField[name]
+            }
+        }
+        bodyContent = JSON.stringify(bodyContent)
+        console.log(bodyContent)
+        const requestOptions = {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: bodyContent
+        };
+        fetch(`http://localhost:4567/api/todos?id=${e.target.id}`, requestOptions)
+            .then(response => {
+                if(response.ok){
+                    toast.success("Todo modifié !", {autoClose: 2000,});
+                    getTodosList()
+                }
+                else{
+                    toast.error("Problème lors de la mise à jour du Todo !");
+                }
+            })
+            .catch(console.log)
+        setTitreEdit("");
+        setDescriptionEdit("");
+        setDueDateEdit("");
         toggleModal2()
     }
 
@@ -140,6 +205,7 @@ function App() {
             isOpen={isOpen}
             onRequestClose={toggleModal}
             contentLabel=""
+            ariaHideApp={false}
         >
             <button onClick={toggleModal}>Close modal</button>
             <form>
@@ -167,12 +233,13 @@ function App() {
             isOpen={isOpen2}
             onRequestClose={toggleModal2}
             contentLabel=""
+            ariaHideApp={false}
         >
             <button onClick={toggleModal2}>Close modal</button>
             <form>
                 <div className="form-group">
-                    <label htmlFor="inputTitre">Titre <p style={{color: 'red', display: 'inline'}}>*</p></label>
-                    <input required type="titre" className="form-control" id="inputTitre"
+                    <label htmlFor="inputTitre">Titre</label>
+                    <input type="titre" className="form-control" id="inputTitre"
                            aria-describedby="" placeholder="Titre de votre Todo" onChange={titreEditChange}/>
                 </div>
                 <div className="form-group">
@@ -180,8 +247,8 @@ function App() {
                     <textarea style={{resize: 'none'}} className="form-control" id="textArea" rows="3" onChange={descEditChange}/>
                 </div>
                 <div className="form-group">
-                    <label htmlFor="inputTitre">Due date <p style={{color: 'red', display: 'inline'}}>*</p></label>
-                    <input required type="date" className="form-control" id="inputDate"
+                    <label htmlFor="inputTitre">Due date</label>
+                    <input type="date" className="form-control" id="inputDate"
                            aria-describedby="" placeholder="jj/mm/aaaa" onChange={dueDateEditChange} style={{width: '200px'}}/>
                 </div>
                 <div className="form-group">
@@ -195,7 +262,7 @@ function App() {
 
 
           <button className="modal-toggle modal-button" onClick={toggleModal}>Ajouter un Todo</button>
-
+          <ToastContainer />
           <div>
               <table style={{width: '100%'}}>
                   <thead style={{backgroundColor: '#adadad'}}>
@@ -211,7 +278,7 @@ function App() {
                   </thead>
                   <tbody>
                   {listTodo.map(todo =>
-                      <tr id={todo.id} key={todo.id} >
+                      <tr key={todo.id} id={todo.id}  >
                           <td>
                               <input id={todo.id} className="checkboxTodo" defaultChecked={todo.statut} onChange={checkboxChange} type='checkbox'/>
                           </td>
@@ -222,10 +289,10 @@ function App() {
                               {todo.description}
                           </td>
                           <td>
-                              {todo.dueDate}
+                              {todo.due_date}
                           </td>
                           <td>
-                              {todo.labelId}
+                              {todo.label_id}
                           </td>
                           <td>
                               <button id={todo.id} onClick={setupModal2}>🖊️</button>
