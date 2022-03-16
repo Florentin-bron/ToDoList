@@ -13,9 +13,14 @@ const connection = mysql.createConnection({
 });
 
 app.listen(4567, () => {})
+//app.use(function(req,res,next){setTimeout(next,1000)});
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+/**
+ *API Todos
+ */
 
 app.get('/api/todos', (req, res) => {
     connection.query(`SELECT * FROM todo`, function(err, rows, fields) {
@@ -76,6 +81,54 @@ app.delete('/api/todos', (req, res ) =>{
         )
     }
     connection.query(`DELETE FROM todo WHERE \`todo\`.\`id\` = ${id}`,
+        function(err, rows, fields) {
+            res.json({rows})
+        });
+});
+
+/**
+ *API Label
+ */
+
+app.get('/api/labels', (req, res) => {
+    connection.query(`SELECT * FROM label`, function(err, rows, fields) {
+        res.json(rows)
+    });
+})
+
+app.get('/api/labels/getColor', (req, res) => {
+    const { id } = req.query;
+    connection.query(`SELECT couleur FROM label WHERE \`id\` = ${id}`, function(err, rows, fields) {
+        console.log(fields)
+        res.json(rows['couleur'])
+    });
+})
+
+
+app.post('/api/labels', (req, res) =>{
+    const { nom } = req.query;
+    const { couleur } = req.query;
+    if(!nom || !couleur){
+        res.status(400).json(
+            { error: 'one or more parameters is required!' }
+        )
+    }
+    connection.query(
+        `INSERT INTO label (\`id\`, \`nom\`, \`couleur\`)
+        VALUES (NULL, '${nom}', '${couleur}');`,
+        function(err, rows, fields) {
+            res.json({rows})
+        });
+});
+
+app.delete('/api/labels', (req, res ) =>{
+    const { id } = req.query;
+    if(!id){
+        res.status(400).json(
+            { error: 'id parameters is required!' }
+        )
+    }
+    connection.query(`DELETE FROM label WHERE \`label\`.\`id\` = ${id}`,
         function(err, rows, fields) {
             res.json({rows})
         });

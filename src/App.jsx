@@ -4,14 +4,17 @@ import Modal from "react-modal";
 import './App.css'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { CirclePicker  } from 'react-color';
 
 
 
 function App() {
 
     const [listTodo, setListTodo] = useState([]);
+    const [listLabel, setListLabel] = useState([]);
     const [titre, setTitre] = useState("");
     const [description, setDescription] = useState("");
+    const [label, setLabel] = useState("");
     const [dueDate, setDueDate] = useState("");
     const [isOpen, setIsOpen] = useState(false);
     const [isOpen2, setIsOpen2] = useState(false);
@@ -20,6 +23,9 @@ function App() {
     const [titreEdit, setTitreEdit] = useState("");
     const [descriptionEdit, setDescriptionEdit] = useState("");
     const [dueDateEdit, setDueDateEdit] = useState("");
+    const [labelEdit, setLabelEdit] = useState("");
+    const [nomLabel, setNomLabel] = useState("");
+    const [couleurLabel, setCouleurLabel] = useState("");
 
     function toggleModal() {
         setIsOpen(!isOpen);
@@ -30,6 +36,7 @@ function App() {
     }
 
     useEffect(() => {
+        getLabelList()
         getTodosList()
     }, [])
 
@@ -42,19 +49,36 @@ function App() {
                 throw response
             })
             .then((data) => {
+                document.getElementById("loader").style.display = "none"
                 setListTodo(() => data )
+            })
+            .catch(console.log)
+    }
+
+    const getLabelList = () => {
+        fetch('http://localhost:4567/api/labels')
+            .then(response => {
+                if(response.ok){
+                    return response.json()
+                }
+                throw response
+            })
+            .then((data) => {
+                setListLabel(() => data)
             })
             .catch(console.log)
     }
 
     const ajoutTodo = (e) =>{
         e.preventDefault();
-        if(titre !== ""){
+        console.log(label)
+        if(titre !== "" && dueDate !== "" && label !== ""){
+            console.log(`http://localhost:4567/api/todos?titre=${titre}&description=${description}&date=${dueDate}&label=${label}`)
             const requestOptions = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
             };
-            fetch(`http://localhost:4567/api/todos?titre=${titre}&description=${description}&date=${dueDate}&label=1`, requestOptions)
+            fetch(`http://localhost:4567/api/todos?titre=${titre}&description=${description}&date=${dueDate}&label=${label}`, requestOptions)
                 .then(response => {
                     if(response.ok){
                         toast.success("Todo ajoutée !");
@@ -67,7 +91,11 @@ function App() {
                 .catch(console.log)
             setTitre("");
             setDescription("");
+            setLabel("");
             toggleModal()
+        }
+        else {
+            toast.error("Champs requis non renseignés");
         }
     }
 
@@ -90,12 +118,18 @@ function App() {
         if(e.target.checked){
             setDone(true)
             switchStatus(e.target.id, e.target.checked)
+            //e.target.closest('tr').style.backgroundColor = "rgba(155,201,76,0.3)"
         }
         else {
             setDone(false)
             switchStatus(e.target.id, e.target.checked)
+            //e.target.closest('tr').style.backgroundColor = "rgba(155,201,76,0)"
         }
 
+    }
+
+    function setCheckedStyle(e){
+        //e.target.closest('tr').style.backgroundColor = "rgba(155,201,76,0.3)"
     }
 
     const switchStatus = (id, status) => {
@@ -162,6 +196,59 @@ function App() {
         setDueDateEdit(e.target.value);
     }
 
+    const todoAddLabelChange = (e) => {
+        e.preventDefault();
+        setLabel(e.target.id);
+    }
+
+    const todoAddLabelChangeEdit = (e) => {
+        e.preventDefault();
+        setLabelEdit(e.target.id);
+    }
+
+    const nomLabelChange = (e) => {
+        e.preventDefault();
+        setNomLabel(e.target.value);
+    }
+
+    const handleChangeComplete = (color) => {
+        setCouleurLabel(color.hex);
+    };
+
+    const findLabelById = (id) => {
+        if(typeof(id) === "number"){
+            const index = listLabel.map(function(x) {return x.id; }).indexOf(id)
+            return (<span className="customLabel rounded p-2" style={{backgroundColor: `#${listLabel[index].couleur}`, color:"white"}}>{listLabel[index].nom}</span>)
+        }
+    }
+
+    const ajoutLabel = (e) =>{
+        e.preventDefault();
+        if(nomLabel !== "" && couleurLabel !== ""){
+            console.log(nomLabel, couleurLabel)
+            const requestOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            };
+            fetch(`http://localhost:4567/api/labels?nom=${nomLabel}&couleur=${couleurLabel.replace("#", "")}`, requestOptions)
+                .then(response => {
+                    if(response.ok){
+                        toast.success("Label ajoutée !");
+                        getLabelList()
+                    }
+                    else{
+                        toast.error("Problème lors de la création du Label !");
+                    }
+                })
+                .catch(console.log)
+            setNomLabel("");
+            setCouleurLabel("");
+        }
+        else {
+            toast.error("Des champs requis ne sont pas renseignés !");
+        }
+    }
+
     const editTodo = (e) => {
         e.preventDefault()
 
@@ -169,6 +256,7 @@ function App() {
         listField['titre'] = titreEdit;
         listField['description'] = descriptionEdit;
         listField['due_date'] = dueDateEdit;
+        listField['label_id'] = labelEdit;
         let bodyContent = {};
         for(let name in listField){
             if(listField[name] !== ""){
@@ -176,7 +264,6 @@ function App() {
             }
         }
         bodyContent = JSON.stringify(bodyContent)
-        console.log(bodyContent)
         const requestOptions = {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -218,10 +305,22 @@ function App() {
                     <label htmlFor="textArea">Description</label>
                     <textarea style={{resize: 'none'}} className="form-control" id="textArea" rows="3" onChange={descChange}/>
                 </div>
-                <div className="form-group">
-                    <label htmlFor="inputTitre">Due date <p style={{color: 'red', display: 'inline'}}>*</p></label>
-                    <input required type="date" className="form-control" id="inputDate"
-                           aria-describedby="" placeholder="jj/mm/aaaa" onChange={dueDateChange} style={{width: '200px'}}/>
+                <div className="row">
+                    <div className="col-4">
+                        <div className="form-group">
+                            <label htmlFor="inputTitre">Due date <p style={{color: 'red', display: 'inline'}}>*</p></label>
+                            <input required type="date" className="form-control" id="inputDate"
+                                   aria-describedby="" placeholder="jj/mm/aaaa" onChange={dueDateChange} style={{width: '200px'}}/>
+                        </div>
+                    </div>
+                    <div className="col-8">
+                        <label className="pr-2" htmlFor="inputTitre">Label <p style={{color: 'red', display: 'inline'}}>*</p></label>
+                        <div className="btn-group-vertical" role="group" aria-label="Basic mixed styles example">
+                            {listLabel.map(selectLabel =>
+                                <button id={selectLabel.id} key={selectLabel.id} type="button" className="btn customLabelBTN" style={{backgroundColor: `#${selectLabel.couleur}`}} onClick={todoAddLabelChange}>{selectLabel.nom}</button>
+                            )}
+                        </div>
+                    </div>
                 </div>
                 <div className="form-group">
                     <input onClick={ajoutTodo} type="submit" value="Ajouter" />
@@ -246,10 +345,23 @@ function App() {
                     <label htmlFor="textArea">Description</label>
                     <textarea style={{resize: 'none'}} className="form-control" id="textArea" rows="3" onChange={descEditChange}/>
                 </div>
-                <div className="form-group">
-                    <label htmlFor="inputTitre">Due date</label>
-                    <input type="date" className="form-control" id="inputDate"
-                           aria-describedby="" placeholder="jj/mm/aaaa" onChange={dueDateEditChange} style={{width: '200px'}}/>
+
+                <div className="row">
+                    <div className="col-4">
+                        <div className="form-group">
+                            <label htmlFor="inputTitre">Due date</label>
+                            <input type="date" className="form-control" id="inputDate"
+                                   aria-describedby="" placeholder="jj/mm/aaaa" onChange={dueDateEditChange} style={{width: '200px'}}/>
+                        </div>
+                    </div>
+                    <div className="col-8">
+                        <label className="pr-2" htmlFor="inputTitre">Label</label>
+                        <div className="btn-group-vertical" role="group" aria-label="Basic mixed styles example">
+                            {listLabel.map(selectLabel =>
+                                <button id={selectLabel.id} key={selectLabel.id} type="button" className="btn customLabelBTN" style={{backgroundColor: `#${selectLabel.couleur}`}} onClick={todoAddLabelChangeEdit}>{selectLabel.nom}</button>
+                            )}
+                        </div>
+                    </div>
                 </div>
                 <div className="form-group">
                     <input id={curEditTodo} onClick={editTodo} type="submit" value="Modifier" />
@@ -259,12 +371,32 @@ function App() {
 
 
       <div className="container column">
-
-
-          <button className="modal-toggle modal-button" onClick={toggleModal}>Ajouter un Todo</button>
+          <div className="container">
+              <button type="button" className="btn m-2 btn-success" onClick={toggleModal}>Ajouter un Todo</button>
+              <button type="button" className="btn btn-info" data-toggle="collapse" data-target="#collapseAddLabel">
+                  Ajouter un label
+              </button>
+              <div id="collapseAddLabel" className="collapse">
+                  <div className="container">
+                      <div className="form-group">
+                          <label htmlFor="inputNom">Nom</label>
+                          <input type="titre" className="form-control" id="inputNom"
+                                 aria-describedby="" placeholder="Nom du label" onChange={nomLabelChange}/>
+                      </div>
+                      <div className="m-2">
+                          <CirclePicker
+                              onChangeComplete={ handleChangeComplete }
+                          />
+                      </div>
+                      <div className="form-group">
+                          <input onClick={ajoutLabel} type="submit" value="Créer le label" />
+                      </div>
+                  </div>
+              </div>
+          </div>
           <ToastContainer />
           <div>
-              <table style={{width: '100%'}}>
+              <table style={{width: '100%'}} className="mb-5">
                   <thead style={{backgroundColor: '#adadad'}}>
                   <tr>
                       <th style={{width: '5%'}}>Statut</th>
@@ -278,9 +410,10 @@ function App() {
                   </thead>
                   <tbody>
                   {listTodo.map(todo =>
-                      <tr key={todo.id} id={todo.id}  >
+                      <tr key={todo.id} id={todo.id}  style={{backgroundColor: todo.statut ? 'rgba(155,201,76,0.3)' : 'rgba(155,201,76,0)'}}>
                           <td>
-                              <input id={todo.id} className="checkboxTodo" defaultChecked={todo.statut} onChange={checkboxChange} type='checkbox'/>
+                              <input id={todo.id} className="checkboxTodo  ml-2" defaultChecked={todo.statut} onChange={checkboxChange} type='checkbox'/>
+
                           </td>
                           <td>
                               {todo.titre}
@@ -292,7 +425,9 @@ function App() {
                               {todo.due_date}
                           </td>
                           <td>
-                              {todo.label_id}
+                            <div className="justify-content-center text-center">
+                                {findLabelById(todo.label_id)}
+                            </div>
                           </td>
                           <td>
                               <button id={todo.id} onClick={setupModal2}>🖊️</button>
@@ -303,6 +438,9 @@ function App() {
                       </tr>)}
                   </tbody>
               </table>
+              <div id="loader" className="customloader text-center">
+                  <img src="src/loader.gif"/>
+              </div>
           </div>
       </div>
     </div>

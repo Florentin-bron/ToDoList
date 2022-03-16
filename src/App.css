@@ -62,3 +62,21 @@ td {
   transform: scale(1.5);
   margin: auto;
 }
+
+.customLabelBTN{
+  text-shadow: 0px 0px 5px black;
+  color: white
+}
+
+.customLabelBTN:focus{
+  box-shadow: 0 0 0 0.2rem black;
+}
+
+.customLabelBTN:hover{
+  text-shadow: 0 0 5px white;
+
+}
+
+.circle-picker > span:focus {
+  color: #61dafb;
+}
