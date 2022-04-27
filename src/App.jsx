@@ -294,8 +294,8 @@ function App() {
             contentLabel=""
             ariaHideApp={false}
         >
-            <button onClick={toggleModal}>Close modal</button>
-            <form>
+            <button onClick={toggleModal} type="button" className="btn btn-danger float-right text-white m-2 font-weight-bold">🗙</button>
+            <form className="mt-5">
                 <div className="form-group">
                     <label htmlFor="inputTitre">Titre <p style={{color: 'red', display: 'inline'}}>*</p></label>
                     <input required type="titre" className="form-control" id="inputTitre"
@@ -334,8 +334,8 @@ function App() {
             contentLabel=""
             ariaHideApp={false}
         >
-            <button onClick={toggleModal2}>Close modal</button>
-            <form>
+            <button onClick={toggleModal2} type="button" className="btn btn-danger float-right text-white m-2 font-weight-bold">🗙</button>
+            <form className="mt-5">
                 <div className="form-group">
                     <label htmlFor="inputTitre">Titre</label>
                     <input type="titre" className="form-control" id="inputTitre"
@@ -396,48 +396,36 @@ function App() {
           </div>
           <ToastContainer />
           <div>
-              <table style={{width: '100%'}} className="mb-5">
-                  <thead style={{backgroundColor: '#adadad'}}>
-                  <tr>
-                      <th style={{width: '5%'}}>Statut</th>
-                      <th style={{width: '15%'}}>Titre</th>
-                      <th style={{width: '55%'}}>Description</th>
-                      <th style={{width: '10%'}}>Due date</th>
-                      <th style={{width: '5%'}}>Label</th>
-                      <th style={{width: '5%'}}>Edit</th>
-                      <th style={{width: '5%'}}>Delete</th>
-                  </tr>
-                  </thead>
-                  <tbody>
-                  {listTodo.map(todo =>
-                      <tr key={todo.id} id={todo.id}  style={{backgroundColor: todo.statut ? 'rgba(155,201,76,0.3)' : 'rgba(155,201,76,0)'}}>
-                          <td>
-                              <input id={todo.id} className="checkboxTodo  ml-2" defaultChecked={todo.statut} onChange={checkboxChange} type='checkbox'/>
-
-                          </td>
-                          <td>
-                              {todo.titre}
-                          </td>
-                          <td>
-                              {todo.description}
-                          </td>
-                          <td>
-                              {todo.due_date}
-                          </td>
-                          <td>
-                            <div className="justify-content-center text-center">
-                                {findLabelById(todo.label_id)}
-                            </div>
-                          </td>
-                          <td>
-                              <button id={todo.id} onClick={setupModal2}>🖊️</button>
-                          </td>
-                          <td>
-                              <button id={todo.id} onClick={deleteTodo}>🗑️</button>
-                          </td>
-                      </tr>)}
-                  </tbody>
-              </table>
+              {listTodo.map(todo =>
+                  <div key={todo.id} id={todo.id} className="card w-100 mb-2">
+                      <div className="card-body">
+                          <h5>{todo.titre}</h5>
+                          <div className="row">
+                              <div style={{width: '5%'}}>
+                                  <input id={todo.id} className="checkboxTodo  ml-2" defaultChecked={todo.statut} onChange={checkboxChange} type='checkbox'/>
+                              </div>
+                              <div className="border p-2 rounded" style={{width: ' 55%'}}>
+                                  {todo.description}
+                              </div>
+                              <div className="text-center" style={{width: '10%'}}>
+                                  <div className="center-block">
+                                      Due Date
+                                  </div>
+                                  <span className="badge badge-secondary">{todo.due_date}</span>
+                              </div>
+                              <div style={{width: '15%'}}>
+                                  <div className="justify-content-center text-center">
+                                      {findLabelById(todo.label_id)}
+                                  </div>
+                              </div>
+                              <div style={{width: '15%'}}>
+                                  <button id={todo.id} onClick={setupModal2} type="button" className="btn btn-info mr-1 mt-n2"><span className="h5">🖊️</span></button>
+                                  <button id={todo.id} onClick={deleteTodo} type="button" className="btn btn-danger mt-n2"><span className="h5">🗑️</span></button>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              )}
               <div id="loader" className="customloader text-center">
                   <img src="src/loader.gif"/>
               </div>

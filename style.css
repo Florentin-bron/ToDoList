@@ -4,10 +4,9 @@
     padding: 10px;
 }
 .navbar-tab{
-    display: inline;
     border-radius: 10px;
     border-color: #ff5c0f;
-    margin-left: 20px;
+    text-align: center;
 }
 
 .modalCustom{
