@@ -161,7 +161,14 @@ function App() {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
             };
-            fetch(`http://localhost:4567/api/todos?id=${e.target.id}`, requestOptions)
+            let id = ""
+            if(e.target.id == ""){
+                id = e.target.closest(".btn-danger").id
+            }
+            else{
+                id = e.target.id
+            }
+            fetch(`http://localhost:4567/api/todos?id=${id}`, requestOptions)
                 .then(response => {
                     if(response.ok){
                         toast.success("Todo supprimé !", {autoClose: 2000,});
@@ -269,7 +276,14 @@ function App() {
             headers: { 'Content-Type': 'application/json' },
             body: bodyContent
         };
-        fetch(`http://localhost:4567/api/todos?id=${e.target.id}`, requestOptions)
+        let id = ""
+        if(e.target.id == ""){
+            id = e.target.closest(".btn-info").id
+        }
+        else{
+            id = e.target.id
+        }
+        fetch(`http://localhost:4567/api/todos?id=${id}`, requestOptions)
             .then(response => {
                 if(response.ok){
                     toast.success("Todo modifié !", {autoClose: 2000,});
