@@ -1,23 +1,18 @@
-# todolist
+# TodoList
 
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running.
+First make sure you have yarn installed on your machine
 
-Say what the step will be
-
+To start server:
 ```
-Give the example
-```
-
-And repeat
-
-```
-until finished
+yarn dev
 ```
 
-End with an example of getting some data out of the system or using it for a little demo.
+To start api:
 
-## Usage <a name = "usage"></a>
+```
+yarn api
+```
 
-Add notes about how to use the system.
+And thats pretty much it !
